@@ -1,9 +1,10 @@
 require 'thor'
 require 'yaml'
 require 'json'
+require 'io/console'
 require 'hocho/config'
 require 'hocho/inventory'
-# require 'hocho/runner'
+require 'hocho/runner'
 
 module Hocho
   class Command < Thor
@@ -55,12 +56,26 @@ module Hocho
     method_option :dry_run, type: :boolean, default: false, alias: %w(-n)
     method_option :driver, type: :string
     def apply(name)
-      # host = inventory.filter(name: name).first
-      # unless host
-      #   raise "host name=#{name.inspect} not found"
-      # end
+      host = inventory.filter(name: name).first
+      unless host
+        raise "host name=#{name.inspect} not found"
+      end
 
+      if config[:ask_sudo_password]
+        print "sudo password: "
+        host.sudo_password = $stdin.noecho { $stdin.gets.chomp }
+        puts
+      end
 
+      Runner.new(
+        host,
+        driver: options[:driver],
+        base_dir: config[:itamae_dir] || '.',
+        initializers: config[:initializers] || [],
+        driver_options: config[:driver_options] || {},
+      ).run(
+        dry_run: options[:dry_run],
+      )
     end
 
     private
@@ -70,7 +85,9 @@ module Hocho
     end
 
     def config
-      @config ||= Hocho::Config.load(config_file)
+      @config ||= Hocho::Config.load(config_file).tap do |c|
+        Dir.chdir c.base_dir # XXX:
+      end
     end
 
     def config_file

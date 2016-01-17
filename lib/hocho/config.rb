@@ -9,13 +9,15 @@ module Hocho
     DEFAULT_INVENTORY_PROVIDERS_CONFIG = [file: {path: './hosts.yml'}]
 
     def self.load(path)
-      new YAML.load_file(path.to_s), basedir: File.dirname(path.to_s)
+      new YAML.load_file(path.to_s), base_dir: File.dirname(path.to_s)
     end
 
-    def initialize(hash, basedir: '.')
+    def initialize(hash, base_dir: '.')
       @config = Hocho::Utils::Symbolize.keys_of(hash)
-      @basedir = Pathname(basedir)
+      @base_dir = Pathname(base_dir)
     end
+
+    attr_reader :base_dir
 
     def [](k)
       @config[k]

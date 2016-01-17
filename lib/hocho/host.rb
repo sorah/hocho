@@ -1,3 +1,4 @@
+require 'hocho/utils/symbolize'
 require 'hashie'
 require 'net/ssh'
 require 'net/ssh/proxy/command'
@@ -15,6 +16,7 @@ module Hocho
     end
 
     attr_reader :name, :provider, :properties, :tmpdir
+    attr_writer :sudo_password
     attr_accessor :tags
 
     def to_h
@@ -56,7 +58,7 @@ module Hocho
     end
 
     def ssh_options
-      (Net::SSH::Config.for(name) || {}).merge(properties[:ssh_options] || {}).merge(@override_ssh_options || {})
+      (Net::SSH::Config.for(name) || {}).merge(Hocho::Utils::Symbolize.keys_of(properties[:ssh_options] || {})).merge(@override_ssh_options || {})
     end
 
     def openssh_config
@@ -78,7 +80,7 @@ module Hocho
           "GlobalKnownHostsFile #{value}"
         when :auth_methods
           [].tap do |lines|
-            methods = []
+            methods = value.dup
             value.each  do |val|
               case val
               when 'hostbased'
@@ -86,9 +88,7 @@ module Hocho
               when 'password'
                 lines << "PasswordAuthentication yes"
               when 'publickey'
-                lines << "PublickeyAuthentication yes"
-              else
-                methods << val
+                lines << "PubkeyAuthentication yes"
               end
             end
             unless methods.empty?
@@ -150,7 +150,7 @@ module Hocho
     end
 
     def make_ssh_connection
-      Net::SSH.start(host.name, ENV['USER'], host.ssh_config)
+      Net::SSH.start(name, nil, ssh_options)
     end
   end
 end
