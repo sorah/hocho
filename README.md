@@ -1,8 +1,14 @@
-# Hocho
+# Hocho: an itamae wrapper
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/hocho`. To experiment with that code, run `bin/console` for an interactive prompt.
+Hocho is a wrapper of the provisioning tool [itamae](https://github.com/itamae-kitchen/itamae).
 
-TODO: Delete this and the text above, and describe your gem
+## Features
+
+- `itamae ssh` support
+- remote `itamae local` support on rsync+bundler
+- Simple pluggable host inventory, discovery
+
+## vs. other softwares
 
 ## Installation
 
@@ -20,9 +26,30 @@ Or install it yourself as:
 
     $ gem install hocho
 
-## Usage
+## Setup
 
-TODO: Write usage instructions here
+``` yaml
+# hocho.yml
+inventory_providers:
+  file:
+    path: './hosts'
+```
+
+```
+# ./hosts/test.yml
+test.example.org:
+  # ssh_options:
+  #   user: ...
+  properties:
+    run_list:
+      - roles/app/default.rb
+```
+
+```
+$ hocho list
+$ hocho show test.example.org
+$ hocho apply test.example.org
+```
 
 ## Development
 
