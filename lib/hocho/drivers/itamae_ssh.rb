@@ -11,6 +11,9 @@ module Hocho
 
       def run(dry_run: false)
         with_node_json_file do |node_json|
+          env = {}.tap do |e|
+            e['SUDO_PASSWORD'] = host.sudo_password if host.sudo_password
+          end
           cmd = ["itamae", "ssh", *@itamae_options, "-j", node_json, "-h", host.hostname]
 
           cmd.push('-u', host.user) if host.user
@@ -21,7 +24,7 @@ module Hocho
           cmd.push(*run_list)
 
           puts "=> $ #{cmd.shelljoin}"
-          system(*cmd, chdir: base_dir) or raise "itamae ssh failed"
+          system(env, *cmd, chdir: base_dir) or raise "itamae ssh failed"
         end
       end
     end
