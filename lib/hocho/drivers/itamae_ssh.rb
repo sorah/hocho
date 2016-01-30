@@ -17,7 +17,7 @@ module Hocho
           cmd = ["itamae", "ssh", *@itamae_options, "-j", node_json, "-h", host.hostname]
 
           cmd.push('-u', host.user) if host.user
-          cmd.push('-p', host.ssh_port) if host.ssh_port
+          cmd.push('-p', host.ssh_port.to_s) if host.ssh_port
           cmd.push('--dry-run') if dry_run
           cmd.push('--color') if $stdout.tty?
 
