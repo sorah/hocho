@@ -33,7 +33,6 @@ module Hocho
             io.read.chomp
           end
         end
-        password[0,password.size] = ?\0 * password.size
 
         begin
           temp_executable = ssh.exec!('mktemp').chomp
