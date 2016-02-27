@@ -37,20 +37,23 @@ module Hocho
         check_exitstatus, check_exitsignal = ssh_run("cd #{host_basedir.shellescape} && #{bundle_path_env}bundle check", error: false)
         return if check_exitstatus == 0
 
-        prepare_sudo do |sh|
+        prepare_sudo do |sh, sudovars, sudocmd|
           bundle_install = [host.bundler_cmd, 'install']
           bundle_install.push('--path', @bundle_path) if @bundle_path
           bundle_install.push('--without', [*@bundle_without].join(?:)) if @bundle_without
 
           puts "=> #{host.name} # #{bundle_install.shelljoin}"
 
-          ssh_run("cd #{host_basedir.shellescape} && #{sh}#{bundle_install.shelljoin}") do |c|
+          ssh_run("bash") do |c|
             c.on_data do |c, data|
               puts "[#{host.name}] #{data}"
             end
             c.on_extended_data do |c, _, data|
               puts "[#{host.name}/ERR] #{data}"
             end
+
+            c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd}#{bundle_install.shelljoin}\n")
+            c.eof!
           end
         end
       end
@@ -62,15 +65,18 @@ module Hocho
           itamae_cmd.push('--color') if $stdout.tty?
           itamae_cmd.push(*run_list)
 
-          prepare_sudo do |sh|
+          prepare_sudo do |sh, sudovars, sudocmd|
             puts "=> #{host.name} # #{host.bundler_cmd} exec #{itamae_cmd.shelljoin}"
-            ssh_run("cd #{host_basedir.shellescape} && #{sh}#{host.bundler_cmd} exec #{itamae_cmd.shelljoin}") do |c|
+            ssh_run("bash") do |c|
               c.on_data do |c, data|
                 puts "[#{host.name}] #{data}"
               end
               c.on_extended_data do |c, _, data|
                 puts "[#{host.name}/ERR] #{data}"
               end
+
+              c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd}#{host.bundler_cmd} exec #{itamae_cmd.shelljoin}\n")
+              c.eof!
             end
           end
         end
