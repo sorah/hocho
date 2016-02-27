@@ -53,6 +53,7 @@ module Hocho
     end
 
     desc "apply HOST", "run itamae"
+    method_option :sudo,  type: :boolean, default: false
     method_option :dry_run, type: :boolean, default: false, alias: %w(-n)
     method_option :driver, type: :string
     def apply(name)
@@ -61,7 +62,7 @@ module Hocho
         raise "host name=#{name.inspect} not found"
       end
 
-      if config[:ask_sudo_password]
+      if config[:ask_sudo_password] || options[:sudo]
         print "sudo password: "
         host.sudo_password = $stdin.noecho { $stdin.gets.chomp }
         puts
