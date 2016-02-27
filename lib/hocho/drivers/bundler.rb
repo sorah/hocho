@@ -48,7 +48,7 @@ module Hocho
             c.on_data do |c, data|
               puts "[#{host.name}] #{data}"
             end
-            c.on_extended_data do |c, data|
+            c.on_extended_data do |c, _, data|
               puts "[#{host.name}/ERR] #{data}"
             end
           end
@@ -68,7 +68,7 @@ module Hocho
               c.on_data do |c, data|
                 puts "[#{host.name}] #{data}"
               end
-              c.on_extended_data do |c, data|
+              c.on_extended_data do |c, _, data|
                 puts "[#{host.name}/ERR] #{data}"
               end
             end
