@@ -15,14 +15,14 @@ module Hocho
         raise "sudo password not present" if !host.nopasswd_sudo? && password.nil?
 
         if host.nopasswd_sudo?
-          yield nil
+          yield nil, nil, nil
           return
         end
 
         passphrase_env_name = "HOCHO_PA_#{SecureRandom.hex(8).upcase}"
         # password_env_name = "HOCHO_PB_#{SecureRandom.hex(8).upcase}"
 
-        temporary_passphrase = SecureRandom.base64(128)
+        temporary_passphrase = SecureRandom.base64(129).chomp
 
         encrypted_password = IO.pipe do |r,w|
           w.write temporary_passphrase
@@ -44,7 +44,9 @@ module Hocho
           end
 
           sh = "#{passphrase_env_name}=#{temporary_passphrase.shellescape} SUDO_ASKPASS=#{temp_executable.shellescape} sudo -A "
-          yield sh
+          exp = "export #{passphrase_env_name}=#{temporary_passphrase.shellescape}\nexport SUDO_ASKPASS=#{temp_executable.shellescape}\n"
+          cmd = "sudo -A "
+          yield sh, exp, cmd
 
         ensure
           ssh_run("shred --remove #{temp_executable.shellescape}")
