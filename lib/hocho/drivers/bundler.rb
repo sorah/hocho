@@ -3,9 +3,10 @@ require 'hocho/drivers/ssh_base'
 module Hocho
   module Drivers
     class Bundler < SshBase
-      def initialize(host, base_dir: '.', initializers: [], bundle_without: [], bundle_path: nil, deploy_dir: nil, keep_synced_files: nil)
+      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], bundle_without: [], bundle_path: nil, deploy_dir: nil, keep_synced_files: nil)
         super host, base_dir: base_dir, initializers: initializers
 
+        @itamae_options = itamae_options
         @bundle_without = bundle_without
         @bundle_path = bundle_path
         @deploy_dir = deploy_dir
@@ -60,7 +61,7 @@ module Hocho
 
       def run_itamae(dry_run: false)
         with_host_node_json_file do
-          itamae_cmd = ['itamae', 'local', '-j', host_node_json_path,]
+          itamae_cmd = ['itamae', 'local', '-j', host_node_json_path, *@itamae_options]
           itamae_cmd.push('--dry-run') if dry_run
           itamae_cmd.push('--color') if $stdout.tty?
           itamae_cmd.push(*run_list)
