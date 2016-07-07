@@ -41,6 +41,10 @@ module Hocho
       end
     end
 
+    def ssh_name
+      properties[:ssh_name] || name
+    end
+
     def run_list
       properties[:run_list] || []
     end
@@ -58,7 +62,7 @@ module Hocho
     end
 
     def ssh_options
-      (Net::SSH::Config.for(name) || {}).merge(Hocho::Utils::Symbolize.keys_of(properties[:ssh_options] || {})).merge(@override_ssh_options || {})
+      (Net::SSH::Config.for(ssh_name) || {}).merge(Hocho::Utils::Symbolize.keys_of(properties[:ssh_options] || {})).merge(@override_ssh_options || {})
     end
 
     def openssh_config
