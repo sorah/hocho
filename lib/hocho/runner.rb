@@ -18,7 +18,10 @@ module Hocho
     def run(dry_run: false)
       puts "Running using #{best_driver_name}"
       driver_options = @driver_options[best_driver_name] || {}
-      best_driver.new(host, base_dir: base_dir, initializers: initializers, **driver_options).run(dry_run: dry_run)
+      driver = best_driver.new(host, base_dir: base_dir, initializers: initializers, **driver_options)
+      driver.run(dry_run: dry_run)
+    ensure
+      driver.finalize
     end
 
     # def check_ssh_port

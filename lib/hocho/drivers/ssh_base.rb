@@ -9,6 +9,10 @@ module Hocho
         host.ssh_connection
       end
 
+      def finalize
+        remove_host_tmpdir!
+      end
+
       def deploy(deploy_dir: nil)
         @host_basedir = deploy_dir if deploy_dir
 
@@ -85,6 +89,13 @@ module Hocho
             raise "Failed to mktemp #{mktemp_cmd.inspect} -> #{res.inspect}"
           end
           res.chomp
+        end
+      end
+
+      def remove_host_tmpdir!
+        if @host_tmpdir
+          host_tmpdir, @host_tmpdir = @host_tmpdir, nil
+          ssh.exec!("rm -rf #{host_tmpdir.shellescape}")
         end
       end
 

@@ -17,6 +17,9 @@ module Hocho
         raise NotImplementedError
       end
 
+      def finalize
+      end
+
       def run_list
         [*initializers, *host.run_list]
       end
