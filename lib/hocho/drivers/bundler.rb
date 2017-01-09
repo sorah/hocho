@@ -3,14 +3,13 @@ require 'hocho/drivers/ssh_base'
 module Hocho
   module Drivers
     class Bundler < SshBase
-      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], bundle_without: [], bundle_path: nil, deploy_dir: nil, keep_synced_files: nil)
+      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], bundle_without: [], bundle_path: nil, deploy_options: {})
         super host, base_dir: base_dir, initializers: initializers
 
         @itamae_options = itamae_options
         @bundle_without = bundle_without
         @bundle_path = bundle_path
-        @deploy_dir = deploy_dir
-        @keep_synced_files = keep_synced_files
+        @deploy_options = deploy_options
       end
 
       def keep_synced_files?
@@ -18,20 +17,12 @@ module Hocho
       end
 
       def run(dry_run: false)
-        deploy
-        bundle_install
-        run_itamae(dry_run: dry_run)
-      ensure
-        cleanup
+        deploy(**@deploy_options) do
+          bundle_install
+          run_itamae(dry_run: dry_run)
+        end
       end
 
-      def deploy
-        ssh_cmd = ['ssh', *host.openssh_config.flat_map { |l| ['-o', "\"#{l}\""] }].join(' ')
-        rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete --exclude=.git), '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
-
-        puts "=> $ #{rsync_cmd.inspect}"
-        system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
-      end
 
       def bundle_install
         bundle_path_env = @bundle_path ? "BUNDLE_PATH=#{@bundle_path.shellescape} " : nil
@@ -82,19 +73,6 @@ module Hocho
           end
         end
       end
-
-      def cleanup
-        return unless !keep_synced_files? || !deploy_dir
-
-        cmd = "rm -rf #{host_basedir.shellescape}"
-        puts "=> #{host.name} $ #{cmd}"
-        ssh_run(cmd, error: false)
-      end
-
-      def host_basedir
-        @deploy_dir || "#{host_tmpdir}/itamae"
-      end
-
     end
   end
 end

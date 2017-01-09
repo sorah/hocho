@@ -9,6 +9,24 @@ module Hocho
         host.ssh_connection
       end
 
+      def deploy(deploy_dir: nil)
+        @host_basedir = deploy_dir if deploy_dir
+
+        ssh_cmd = ['ssh', *host.openssh_config.flat_map { |l| ['-o', "\"#{l}\""] }].join(' ')
+        rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete --exclude=.git), '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
+
+        puts "=> $ #{rsync_cmd.inspect}"
+        system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
+
+        yield
+      ensure
+        if !deploy_dir || !keep_synced_files
+          cmd = "rm -rf #{host_basedir.shellescape}"
+          puts "=> #{host.name} $ #{cmd}"
+          ssh_run(cmd, error: false)
+        end
+      end
+
       private
 
       def prepare_sudo(password = host.sudo_password)
@@ -53,6 +71,9 @@ module Hocho
         end
       end
 
+      def host_basedir
+        @host_basedir || "#{host_tmpdir}/itamae"
+      end
 
       def host_tmpdir
         @host_tmpdir ||= begin
