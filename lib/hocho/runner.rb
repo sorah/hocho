@@ -21,7 +21,7 @@ module Hocho
       driver = best_driver.new(host, base_dir: base_dir, initializers: initializers, **driver_options)
       driver.run(dry_run: dry_run)
     ensure
-      driver.finalize
+      driver.finalize if driver
     end
 
     # def check_ssh_port

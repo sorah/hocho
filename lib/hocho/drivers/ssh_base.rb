@@ -11,16 +11,35 @@ module Hocho
 
       def finalize
         remove_host_tmpdir!
+        remove_host_shmdir!
       end
 
-      def deploy(deploy_dir: nil)
+      def deploy(deploy_dir: nil, shm_prefix: [])
         @host_basedir = deploy_dir if deploy_dir
 
-        ssh_cmd = ['ssh', *host.openssh_config.flat_map { |l| ['-o', "\"#{l}\""] }].join(' ')
-        rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete --exclude=.git), '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
+        shm_prefix = [*shm_prefix]
 
-        puts "=> $ #{rsync_cmd.inspect}"
+        ssh_cmd = ['ssh', *host.openssh_config.flat_map { |l| ['-o', "\"#{l}\""] }].join(' ')
+        shm_exclude = shm_prefix.map{ |_| "--exclude=#{_}" }
+        rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete --exclude=.git), *shm_exclude, '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
+
+        puts "=> $ #{rsync_cmd.shelljoin}"
         system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
+
+        unless shm_prefix.empty?
+          shm_include = shm_prefix.map{ |_| "--include=#{_.sub(%r{/\z},'')}/***" }
+          rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete), *shm_include, '--exclude=*', '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_shm_basedir}"]
+          puts "=> $ #{rsync_cmd.shelljoin}"
+          system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
+          shm_prefix.each do |x|
+            mkdir = if %r{\A[^/].*\/.+\z} === x
+                      %Q(mkdir -vp "$(basename #{x.shellescape})" &&)
+                    else
+                      nil
+                    end
+            ssh_run(%Q(cd #{host_basedir} && #{mkdir} ln -sfv #{host_shm_basedir}/#{x.shellescape} ./#{x.sub(%r{/\z},'').shellescape}))
+          end
+        end
 
         yield
       ensure
@@ -79,13 +98,45 @@ module Hocho
         @host_basedir || "#{host_tmpdir}/itamae"
       end
 
+      def host_shm_basedir
+        host_shmdir && "#{host_shmdir}/itamae"
+      end
+
+      def host_shmdir
+        return @host_shmdir if @host_shmdir
+        return nil if @host_shmdir == false
+
+        shmdir = host.shmdir
+        unless shmdir
+          if ssh.exec!('uname').chomp == 'Linux'
+            shmdir = '/dev/shm'
+            mount = ssh.exec!("grep -F #{shmdir.shellescape} /proc/mounts").each_line.map{ |_| _.chomp.split(' ') }
+            unless mount.find { |_| _[1] == shmdir }&.first == 'tmpfs'
+              @host_shmdir = false
+              return nil
+            end
+          else
+            @host_shmdir = false
+            return nil
+          end
+        end
+
+        mktemp_cmd = "TMPDIR=#{shmdir.shellescape} #{%w(mktemp -d -t hocho-run-XXXXXXXXX).shelljoin}"
+
+        res = ssh.exec!(mktemp_cmd)
+        unless res.start_with?(shmdir)
+          raise "Failed to shm mktemp #{mktemp_cmd.inspect} -> #{res.inspect}"
+        end
+        @host_shmdir = res.chomp
+      end
+
       def host_tmpdir
         @host_tmpdir ||= begin
           mktemp_cmd = %w(mktemp -d -t hocho-run-XXXXXXXXX).shelljoin
           mktemp_cmd.prepend("TMPDIR=#{host.tmpdir.shellescape} ") if host.tmpdir
 
           res = ssh.exec!(mktemp_cmd)
-          unless res.start_with?('/tmp')
+          unless res.start_with?(host.tmpdir || '/')
             raise "Failed to mktemp #{mktemp_cmd.inspect} -> #{res.inspect}"
           end
           res.chomp
@@ -98,6 +149,14 @@ module Hocho
           ssh.exec!("rm -rf #{host_tmpdir.shellescape}")
         end
       end
+
+      def remove_host_shmdir!
+        if @host_shmdir
+          host_shmdir, @host_shmdir = @host_shmdir, nil
+          ssh.exec!("rm -rf #{host_shmdir.shellescape}")
+        end
+      end
+
 
       def host_node_json_path
         "#{host_tmpdir}/node.json"

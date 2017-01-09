@@ -5,17 +5,18 @@ require 'net/ssh/proxy/command'
 
 module Hocho
   class Host
-    def initialize(name, provider: nil, properties: {}, tags: {}, ssh_options: nil, tmpdir: nil, sudo_password: nil)
+    def initialize(name, provider: nil, properties: {}, tags: {}, ssh_options: nil, tmpdir: nil, shmdir: nil, sudo_password: nil)
       @name = name
       @provider = provider
       self.properties = properties
       @tags = tags
       @override_ssh_options = ssh_options
       @tmpdir = tmpdir
+      @shmdir = shmdir
       @sudo_password = sudo_password
     end
 
-    attr_reader :name, :provider, :properties, :tmpdir
+    attr_reader :name, :provider, :properties, :tmpdir, :shmdir
     attr_writer :sudo_password
     attr_accessor :tags
 
@@ -27,6 +28,7 @@ module Hocho
         properties: properties.to_h,
       }.tap do |h|
         h[:tmpdir] = tmpdir if tmpdir
+        h[:shmdir] = shmdir if shmdir
         h[:ssh_options] = @override_ssh_options if @override_ssh_options
       end
     end
