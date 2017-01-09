@@ -12,10 +12,6 @@ module Hocho
         @deploy_options = deploy_options
       end
 
-      def keep_synced_files?
-        @keep_synced_files
-      end
-
       def run(dry_run: false)
         deploy(**@deploy_options) do
           bundle_install
