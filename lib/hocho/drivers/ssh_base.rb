@@ -76,7 +76,8 @@ module Hocho
         end
 
         begin
-          temp_executable = ssh.exec!('mktemp').chomp
+          tmpdir = host_shmdir ? "TMPDIR=#{host_shmdir.shellescape} " : nil
+          temp_executable = ssh.exec!("#{tmpdir}mktemp").chomp
           raise unless temp_executable.start_with?('/')
 
           ssh_run("chmod 0700 #{temp_executable.shellescape}; cat > #{temp_executable.shellescape}; chmod +x #{temp_executable.shellescape}") do |ch|
