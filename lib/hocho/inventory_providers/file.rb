@@ -27,7 +27,7 @@ module Hocho
           content.map do |name, value|
             Host.new(
               name.to_s,
-              provider: self.class,
+              providers: self.class,
               properties: value[:properties],
               tags: value[:tags],
               ssh_options: value[:ssh_options]

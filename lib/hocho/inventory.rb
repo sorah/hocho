@@ -5,7 +5,16 @@ module Hocho
     end
 
     def hosts
-      @hosts ||= @providers.flat_map(&:hosts)
+      @hosts ||= @providers.inject({}) do |r,provider|
+        provider.hosts.each do |host|
+          if r.key?(host.name)
+            r[host.name].merge!(host)
+          else
+            r[host.name] = host
+          end
+          r
+        end
+      end
     end
 
     def filter(filters)

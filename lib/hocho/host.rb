@@ -5,9 +5,13 @@ require 'net/ssh/proxy/command'
 
 module Hocho
   class Host
-    def initialize(name, provider: nil, properties: {}, tags: {}, ssh_options: nil, tmpdir: nil, shmdir: nil, sudo_password: nil)
+    def initialize(name, provider: nil, providers: nil, properties: {}, tags: {}, ssh_options: nil, tmpdir: nil, shmdir: nil, sudo_password: nil)
+      if provider
+        warn "DEPRECATION WARNING: #{caller[1]}: Hocho::Host.new(provider:) is deprecated. Use providers: instead "
+      end
+
       @name = name
-      @provider = provider
+      @providers = [*provider, *providers]
       self.properties = properties
       @tags = tags
       @override_ssh_options = ssh_options
@@ -16,14 +20,14 @@ module Hocho
       @sudo_password = sudo_password
     end
 
-    attr_reader :name, :provider, :properties, :tmpdir, :shmdir
+    attr_reader :name, :providers, :properties, :tmpdir, :shmdir
     attr_writer :sudo_password
     attr_accessor :tags
 
     def to_h
       {
         name: name,
-        provider: provider,
+        providers: providers,
         tags: tags.to_h,
         properties: properties.to_h,
       }.tap do |h|
@@ -35,6 +39,13 @@ module Hocho
 
     def properties=(other)
       @properties = Hashie::Mash.new(other)
+    end
+
+    def merge!(other)
+      @tags.merge!(other.tags)
+      @tmpdir = other.tmpdir if other.tmpdir
+      @shmdir = other.shmdir if other.shmdir
+      @properties.merge(other.properties)
     end
 
     def add_properties_from_providers(providers)
