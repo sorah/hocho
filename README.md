@@ -4,13 +4,14 @@ Hocho is a wrapper of the provisioning tool [itamae](https://github.com/itamae-k
 
 ## Features
 
-- `itamae ssh` support
-- remote `itamae local` support on rsync+bundler
+- Drivers
+  - `itamae ssh` support
+  - remote `itamae local` support on rsync+bundler
+  - remote `mitamae` support
 - Simple pluggable host inventory, discovery
 
-## vs. other softwares
-
 ## Installation
+
 
 Add this line to your application's Gemfile:
 
@@ -33,6 +34,9 @@ Or install it yourself as:
 inventory_providers:
   file:
     path: './hosts'
+# driver_options:
+#   mitamae:
+#     mitamae_prepare_script: 'wget -O /usr/local/bin/mitamae https://...'
 ```
 
 ```
@@ -41,6 +45,8 @@ test.example.org:
   # ssh_options:
   #   user: ...
   properties:
+    # preferred_driver: bundler
+    # preferred_driver: mitamae
     run_list:
       - roles/app/default.rb
 ```
