@@ -33,12 +33,7 @@ module Hocho
           puts "=> #{host.name} # #{bundle_install.shelljoin}"
 
           ssh_run("bash") do |c|
-            c.on_data do |c, data|
-              puts "[#{host.name}] #{data}"
-            end
-            c.on_extended_data do |c, _, data|
-              puts "[#{host.name}/ERR] #{data}"
-            end
+            set_ssh_output_hook(c)
 
             c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd}#{bundle_install.shelljoin}\n")
             c.eof!
@@ -56,12 +51,7 @@ module Hocho
           prepare_sudo do |sh, sudovars, sudocmd|
             puts "=> #{host.name} # #{host.bundler_cmd} exec #{itamae_cmd.shelljoin}"
             ssh_run("bash") do |c|
-              c.on_data do |c, data|
-                puts "[#{host.name}] #{data}"
-              end
-              c.on_extended_data do |c, _, data|
-                puts "[#{host.name}/ERR] #{data}"
-              end
+              set_ssh_output_hook(c)
 
               c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd}#{host.bundler_cmd} exec #{itamae_cmd.shelljoin}\n")
               c.eof!

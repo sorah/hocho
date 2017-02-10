@@ -95,6 +95,34 @@ module Hocho
         end
       end
 
+      def set_ssh_output_hook(c)
+        outbuf, errbuf = [], []
+        check = ->(prefix,data,buf) do
+          has_newline = data.include?("\n")
+          lines = data.lines
+          last = lines.pop
+          if last[-1] == "\n"
+            buf << last
+          end
+          if has_newline
+            (buf+lines).join.each_line do |line|
+              puts "#{prefix} #{line}"
+            end
+            buf.replace([])
+          end
+          if last[-1] != "\n"
+            buf << last
+          end
+        end
+
+        c.on_data do |c, data|
+          check.call "[#{host.name}] ", data, outbuf
+        end
+        c.on_extended_data do |c, _, data|
+          check.call "[#{host.name}/ERR] ", data, errbuf
+        end
+      end
+
       def host_basedir
         @host_basedir || "#{host_tmpdir}/itamae"
       end

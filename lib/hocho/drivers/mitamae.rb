@@ -51,12 +51,7 @@ module Hocho
           puts "#{log_prefix}#{script.each_line.map{ |_| "#{log_prefix_white}#{_.chomp}" }.join("\n")}"
 
           ssh_run("bash") do |c|
-            c.on_data do |c, data|
-              puts "[#{host.name}] #{data}"
-            end
-            c.on_extended_data do |c, _, data|
-              puts "[#{host.name}/ERR] #{data}"
-            end
+            set_ssh_output_hook(c)
 
             c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd} bash <<-'HOCHOEOS'\n#{script}HOCHOEOS\n")
             c.eof!
@@ -79,12 +74,7 @@ module Hocho
           prepare_sudo do |sh, sudovars, sudocmd|
             puts "=> #{host.name} # #{itamae_cmd.shelljoin}"
             ssh_run("bash") do |c|
-              c.on_data do |c, data|
-                puts "[#{host.name}] #{data}"
-              end
-              c.on_extended_data do |c, _, data|
-                puts "[#{host.name}/ERR] #{data}"
-              end
+              set_ssh_output_hook(c)
 
               c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd} #{itamae_cmd.shelljoin}\n")
               c.eof!
