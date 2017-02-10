@@ -78,67 +78,69 @@ module Hocho
       (Net::SSH::Config.for(ssh_name) || {}).merge(Hocho::Utils::Symbolize.keys_of(properties[:ssh_options] || {})).merge(@override_ssh_options || {})
     end
 
-    def openssh_config
+    def openssh_config(separator='=')
       ssh_options.flat_map do |key, value|
         case key
         when :encryption
-          "Ciphers #{[*value].join(?,)}"
+         [["Ciphers", [*value].join(?,)]]
         when :compression
-          "Compression #{value}"
+         [["Compression", value]]
         when :compression_level
-          "CompressionLevel #{value}"
+         [["CompressionLevel", value]]
         when :timeout
-          "ConnectTimeout #{value}"
+         [["ConnectTimeout", value]]
         when :forward_agent
-          "ForwardAgent #{value ? 'yes' : 'no'}"
+         [["ForwardAgent", value ? 'yes' : 'no']]
         when :keys_only
-          "IdentitiesOnly #{value ? 'yes' : 'no'}"
+         [["IdentitiesOnly", value ? 'yes' : 'no']]
         when :global_known_hosts_file
-          "GlobalKnownHostsFile #{value}"
+         [["GlobalKnownHostsFile", value]]
         when :auth_methods
           [].tap do |lines|
             methods = value.dup
             value.each  do |val|
               case val
               when 'hostbased'
-                lines << "HostBasedAuthentication yes"
+                lines << ["HostBasedAuthentication", "yes"]
               when 'password'
-                lines << "PasswordAuthentication yes"
+                lines << ["PasswordAuthentication", "yes"]
               when 'publickey'
-                lines << "PubkeyAuthentication yes"
+                lines << ["PubkeyAuthentication", "yes"]
               end
             end
             unless methods.empty?
-              lines << "PreferredAuthentications #{methods.join(?,)}"
+              lines << ["PreferredAuthentications", methods.join(?,)]
             end
           end
         when :host_key
-          "HostKeyAlgorithms #{[*value].join(?,)}"
+         [["HostKeyAlgorithms", [*value].join(?,)]]
         when :host_key_alias
-          "HostKeyAlias #{value}"
+         [["HostKeyAlias", value]]
         when :host_name
-          "HostName #{value}"
+         [["HostName", value]]
         when :keys
           [*value].map do |val|
-            "IdentityFile #{val}"
+           ["IdentityFile", val]
           end
         when :hmac
-          "Macs #{[*value].join(?,)}"
+         [["Macs", [*value].join(?,)]]
         when :port
-          "Port #{value}"
+         [["Port", value]]
         when :proxy
           if value.kind_of?(Net::SSH::Proxy::Command)
-            "ProxyCommand #{value.command_line_template}"
+           [["ProxyCommand", value.command_line_template]]
           else
-            "ProxyCommand #{value}"
+           [["ProxyCommand", value]]
           end
         when :rekey_limit
-          "RekeyLimit #{value}"
+         [["RekeyLimit", value]]
         when :user
-          "User #{value}"
+         [["User", value]]
         when :user_known_hosts_file
-          "UserKnownHostsFile #{value}"
+         [["UserKnownHostsFile", value]]
         end
+      end.compact.map do |keyval|
+        keyval.join(separator)
       end
     end
 
