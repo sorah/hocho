@@ -1,7 +1,8 @@
 module Hocho
   class Inventory
-    def initialize(providers)
+    def initialize(providers, property_providers)
       @providers = providers
+      @property_providers = property_providers
     end
 
     def hosts
@@ -14,6 +15,8 @@ module Hocho
           end
         end
         r
+      end.each do |name, host|
+        host.apply_property_providers(@property_providers)
       end.values
     end
 

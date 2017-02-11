@@ -17,9 +17,6 @@ module Hocho
       hosts = inventory.hosts
 
       if options[:verbose]
-        hosts.each do |host|
-          config.property_providers.each { |_| _.determine(host) }
-        end
         case options[:format]
         when 'yaml'
           puts hosts.map(&:to_h).to_yaml
@@ -82,7 +79,7 @@ module Hocho
     private
 
     def inventory
-      @inventory ||= Hocho::Inventory.new(config.inventory_providers)
+      @inventory ||= Hocho::Inventory.new(config.inventory_providers, config.property_providers)
     end
 
     def config

@@ -48,7 +48,7 @@ module Hocho
       @properties.merge(other.properties)
     end
 
-    def add_properties_from_providers(providers)
+    def apply_property_providers(providers)
       providers.each do |provider|
         provider.determine(self)
       end
