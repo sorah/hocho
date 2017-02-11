@@ -44,7 +44,7 @@ property_providers:
 #     mitamae_prepare_script: 'wget -O /usr/local/bin/mitamae https://...'
 ```
 
-```
+``` yaml
 # ./hosts/test.yml
 test.example.org:
   # ssh_options:
