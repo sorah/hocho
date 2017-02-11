@@ -12,9 +12,9 @@ module Hocho
           else
             r[host.name] = host
           end
-          r
         end
-      end
+        r
+      end.values
     end
 
     def filter(filters)
