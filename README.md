@@ -34,6 +34,11 @@ Or install it yourself as:
 inventory_providers:
   file:
     path: './hosts'
+property_providers:
+  - add_default:
+      properties:
+        blah: blahblah
+        # preferred_driver: mitamae
 # driver_options:
 #   mitamae:
 #     mitamae_prepare_script: 'wget -O /usr/local/bin/mitamae https://...'
