@@ -56,7 +56,7 @@ module Hocho
         raise "sudo password not present" if !host.nopasswd_sudo? && password.nil?
 
         if host.nopasswd_sudo?
-          yield nil, nil, nil
+          yield nil, nil, "sudo "
           return
         end
 
