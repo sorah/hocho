@@ -53,7 +53,12 @@ module Hocho
       private
 
       def prepare_sudo(password = host.sudo_password)
-        raise "sudo password not present" if !host.nopasswd_sudo? && password.nil?
+        raise "sudo password not present" if host.sudo_required? && !host.nopasswd_sudo? && password.nil?
+
+        unless host.sudo_required?
+          yield nil, nil, ""
+          return
+        end
 
         if host.nopasswd_sudo?
           yield nil, nil, "sudo "
