@@ -70,6 +70,10 @@ module Hocho
       @sudo_password || properties[:sudo_password] || ENV['SUDO_PASSWORD']
     end
 
+    def sudo_required?
+      properties.fetch(:sudo_required, true)
+    end
+
     def nopasswd_sudo?
       !!properties[:nopasswd_sudo]
     end
