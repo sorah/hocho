@@ -51,7 +51,7 @@ module Hocho
 
     desc "apply HOST", "run itamae"
     method_option :sudo,  type: :boolean, default: false
-    method_option :dry_run, type: :boolean, default: false, alias: %w(-n)
+    method_option :dry_run, type: :boolean, default: false, aliases: %w(-n)
     method_option :driver, type: :string
     def apply(name)
       host = inventory.filter(name: name).first
