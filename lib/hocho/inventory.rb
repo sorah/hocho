@@ -22,7 +22,7 @@ module Hocho
 
     def filter(filters)
       filters = filters.map do |name, value|
-        [name.to_s, value.to_s.split(?,) { |_| /#{Regexp.escape(_).gsub(/\\*/,'.*')}/ }]
+        [name.to_s, value.to_s.split(?,).map! { |_| /#{Regexp.escape(_).gsub(/\\*/,'.*')}/ }]
       end.to_h
 
       hosts.select do |host|
