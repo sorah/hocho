@@ -13,8 +13,8 @@ module Hocho
         @deploy_options = deploy_options
       end
 
-
       def run(dry_run: false)
+        ssh # Test connection
         deploy(**@deploy_options) do
           prepare_mitamae
           run_mitamae(dry_run: dry_run)

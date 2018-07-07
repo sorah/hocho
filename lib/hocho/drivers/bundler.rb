@@ -13,6 +13,7 @@ module Hocho
       end
 
       def run(dry_run: false)
+        ssh # Test connection
         deploy(**@deploy_options) do
           bundle_install
           run_itamae(dry_run: dry_run)

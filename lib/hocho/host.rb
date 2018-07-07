@@ -18,11 +18,13 @@ module Hocho
       @tmpdir = tmpdir
       @shmdir = shmdir
       @sudo_password = sudo_password
+
+      @use_alternate_ssh_options = false
     end
 
     attr_reader :name, :providers, :properties, :tmpdir, :shmdir
     attr_writer :sudo_password
-    attr_accessor :tags
+    attr_accessor :tags, :use_alternate_ssh_options
 
     def to_h
       {
@@ -79,7 +81,23 @@ module Hocho
     end
 
     def ssh_options
+      use_alternate_ssh_options? ? alternate_ssh_options : normal_ssh_options
+    end
+
+    def normal_ssh_options
       (Net::SSH::Config.for(ssh_name) || {}).merge(Hocho::Utils::Symbolize.keys_of(properties[:ssh_options] || {})).merge(@override_ssh_options || {})
+    end
+
+    def alternate_ssh_options
+      normal_ssh_options.merge(Hocho::Utils::Symbolize.keys_of(properties.fetch(:alternate_ssh_options, {})))
+    end
+
+    def alternate_ssh_options_available?
+      !!properties[:alternate_ssh_options]
+    end
+
+    def use_alternate_ssh_options?
+      @use_alternate_ssh_options
     end
 
     def openssh_config(separator='=')
@@ -176,7 +194,17 @@ module Hocho
     end
 
     def make_ssh_connection
-      Net::SSH.start(name, nil, ssh_options)
+      alt = false
+      begin
+        Net::SSH.start(name, nil, ssh_options)
+      rescue Net::SSH::Exception => e
+        raise if alt
+        raise unless alternate_ssh_options_available?
+        puts "[#{name}] Trying alternate_ssh_options due to #{e.inspect}"
+        self.use_alternate_ssh_options = true
+        alt = true
+        retry
+      end
     end
   end
 end
