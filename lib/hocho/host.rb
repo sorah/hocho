@@ -131,8 +131,11 @@ module Hocho
         when :port
          [["Port", value]]
         when :proxy
-          if value.kind_of?(Net::SSH::Proxy::Command)
+          case value
+          when Net::SSH::Proxy::Command
            [["ProxyCommand", value.command_line_template]]
+          when false
+           [["ProxyCommand", 'off']]
           else
            [["ProxyCommand", value]]
           end
