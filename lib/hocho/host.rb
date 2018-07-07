@@ -45,7 +45,7 @@ module Hocho
       @tags.merge!(other.tags) if other.tags
       @tmpdir = other.tmpdir if other.tmpdir
       @shmdir = other.shmdir if other.shmdir
-      @properties.merge(other.properties)
+      @properties.merge!(other.properties)
     end
 
     def apply_property_providers(providers)
