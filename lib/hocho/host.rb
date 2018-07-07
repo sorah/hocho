@@ -135,7 +135,7 @@ module Hocho
           when Net::SSH::Proxy::Command
            [["ProxyCommand", value.command_line_template]]
           when false
-           [["ProxyCommand", 'off']]
+           [["ProxyCommand", 'none']]
           else
            [["ProxyCommand", value]]
           end
