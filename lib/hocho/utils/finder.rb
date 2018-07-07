@@ -1,6 +1,7 @@
 module Hocho
   module Utils
     module Finder
+      class NotFound < StandardError; end
       def self.find(const, prefix, name)
         retried = false
         constant_name = name.to_s.gsub(/\A.|_./) { |s| s[-1].upcase }
@@ -17,8 +18,7 @@ module Hocho
             retried = true
             retry
           end
-
-          nil
+          raise NotFound, "Couldn't find #{prefix}/#{name}"
         end
       end
     end
