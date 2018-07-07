@@ -28,9 +28,9 @@ module Hocho
             Host.new(
               name.to_s,
               providers: self.class,
-              properties: value[:properties],
-              tags: value[:tags],
-              ssh_options: value[:ssh_options]
+              properties: value[:properties] || {},
+              tags: value[:tags] || {},
+              ssh_options: value[:ssh_options],
             )
           end
         end

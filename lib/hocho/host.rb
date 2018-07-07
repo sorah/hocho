@@ -42,7 +42,7 @@ module Hocho
     end
 
     def merge!(other)
-      @tags.merge!(other.tags)
+      @tags.merge!(other.tags) if other.tags
       @tmpdir = other.tmpdir if other.tmpdir
       @shmdir = other.shmdir if other.shmdir
       @properties.merge(other.properties)
