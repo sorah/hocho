@@ -16,7 +16,7 @@ module Hocho
     attr_reader :host, :driver, :base_dir, :initializers
 
     def run(dry_run: false)
-      puts "Running using #{best_driver_name}"
+      puts "=> Running on #{host.name} using #{best_driver_name}"
       driver_options = @driver_options[best_driver_name] || {}
       driver = best_driver.new(host, base_dir: base_dir, initializers: initializers, **driver_options)
       driver.run(dry_run: dry_run)

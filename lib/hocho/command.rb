@@ -52,28 +52,40 @@ module Hocho
     desc "apply HOST", "run itamae"
     method_option :sudo,  type: :boolean, default: false
     method_option :dry_run, type: :boolean, default: false, aliases: %w(-n)
+    method_option :exclude, type: :string, default: '', aliases: %w(-e)
     method_option :driver, type: :string
     def apply(name)
-      host = inventory.filter(name: name).first
-      unless host
+      hosts = inventory.filter({name: name}, exclude_filters: {name: options[:exclude]})
+      if hosts.empty?
         raise "host name=#{name.inspect} not found"
+      end
+
+      if hosts.size > 1
+        puts "Running sequencial on:"
+        hosts.each do |host|
+          puts " * #{host.name}"
+        end
+        puts
       end
 
       if config[:ask_sudo_password] || options[:sudo]
         print "sudo password: "
-        host.sudo_password = $stdin.noecho { $stdin.gets.chomp }
+        sudo_password = $stdin.noecho { $stdin.gets.chomp }
         puts
       end
 
-      Runner.new(
-        host,
-        driver: options[:driver],
-        base_dir: config[:itamae_dir] || '.',
-        initializers: config[:initializers] || [],
-        driver_options: config[:driver_options] || {},
-      ).run(
-        dry_run: options[:dry_run],
-      )
+      hosts.each do |host|
+        host.sudo_password = sudo_password if sudo_password
+        Runner.new(
+          host,
+          driver: options[:driver],
+          base_dir: config[:itamae_dir] || '.',
+          initializers: config[:initializers] || [],
+          driver_options: config[:driver_options] || {},
+        ).run(
+          dry_run: options[:dry_run],
+        )
+      end
     end
 
     private
