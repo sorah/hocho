@@ -73,7 +73,7 @@ module Hocho
         encrypted_password = IO.pipe do |r,w|
           w.write temporary_passphrase
           w.close
-          IO.popen([*%w(openssl enc -aes-128-cbc -pass fd:5 -a), 5 => r], "r+") do |io|
+          IO.popen([*%w(openssl enc -aes-128-cbc -pass fd:5 -a -md sha256), 5 => r], "r+") do |io|
             io.puts password
             io.close_write
             io.read.chomp
@@ -86,7 +86,7 @@ module Hocho
           raise unless temp_executable.start_with?('/')
 
           ssh_run("chmod 0700 #{temp_executable.shellescape}; cat > #{temp_executable.shellescape}; chmod +x #{temp_executable.shellescape}") do |ch|
-            ch.send_data("#!/bin/bash\nexec openssl enc -aes-128-cbc -d -a -pass env:#{passphrase_env_name} <<< #{encrypted_password.shellescape}\n")
+            ch.send_data("#!/bin/bash\nexec openssl enc -aes-128-cbc -d -a -md sha256 -pass env:#{passphrase_env_name} <<< #{encrypted_password.shellescape}\n")
             ch.eof!
           end
 
