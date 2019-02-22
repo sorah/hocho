@@ -70,10 +70,12 @@ module Hocho
 
         temporary_passphrase = SecureRandom.base64(129).chomp
 
+        derive = system(*%w(openssl enc -pbkdf2), in: File::NULL, out: File::NULL, err: [:child, :out]) ? %w(-pbkdf2) : []
+
         encrypted_password = IO.pipe do |r,w|
           w.write temporary_passphrase
           w.close
-          IO.popen([*%w(openssl enc -aes-128-cbc -pass fd:5 -a -md sha256), 5 => r], "r+") do |io|
+          IO.popen([*%w(openssl enc -aes-128-cbc -pass fd:5 -a -md sha256), *derive, 5 => r], "r+") do |io|
             io.puts password
             io.close_write
             io.read.chomp
