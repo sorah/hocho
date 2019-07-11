@@ -88,7 +88,7 @@ module Hocho
           raise unless temp_executable.start_with?('/')
 
           ssh_run("chmod 0700 #{temp_executable.shellescape}; cat > #{temp_executable.shellescape}; chmod +x #{temp_executable.shellescape}") do |ch|
-            ch.send_data("#!/bin/bash\nexec openssl enc -aes-128-cbc -d -a -md sha256 -pass env:#{passphrase_env_name} <<< #{encrypted_password.shellescape}\n")
+            ch.send_data("#!/bin/bash\nexec openssl enc -aes-128-cbc -d -a -md sha256 #{derive.shelljoin} -pass env:#{passphrase_env_name} <<< #{encrypted_password.shellescape}\n")
             ch.eof!
           end
 
