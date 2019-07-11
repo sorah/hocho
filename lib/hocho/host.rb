@@ -197,7 +197,7 @@ module Hocho
       alt = false
       begin
         Net::SSH.start(name, nil, ssh_options)
-      rescue Net::SSH::Exception, Errno::ECONNREFUSED => e
+      rescue Net::SSH::Exception, Errno::ECONNREFUSED, Net::SSH::Proxy::ConnectError => e
         raise if alt
         raise unless alternate_ssh_options_available?
         puts "[#{name}] Trying alternate_ssh_options due to #{e.inspect}"
