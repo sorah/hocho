@@ -109,30 +109,36 @@ module Hocho
       end
 
       def set_ssh_output_hook(c)
-        outbuf, errbuf = [], []
-        check = ->(prefix,data,buf) do
-          has_newline = data.include?("\n")
+        check = ->(prefix, data, buf) do
+          data = buf + data unless buf.empty?
+          return if data.empty?
+
           lines = data.lines
-          last = lines.pop
-          if last[-1] == "\n"
-            buf << last
+
+          # If data is not NL-terminated, its last line is carried over to next check.call
+          if lines.last.end_with?("\n")
+            buf.clear
+          else
+            buf.replace(lines.pop)
           end
-          if has_newline
-            (buf+lines).join.each_line do |line|
-              puts "#{prefix} #{line}"
-            end
-            buf.replace([])
-          end
-          if last[-1] != "\n"
-            buf << last
+
+          lines.each do |line|
+            puts "#{prefix}#{line}"
           end
         end
 
+        outbuf, errbuf = +"", +""
+        outpre, errpre = "[#{host.name}] ", "[#{host.name}/ERR] "
+
         c.on_data do |c, data|
-          check.call "[#{host.name}] ", data, outbuf
+          check.call outpre, data, outbuf
         end
         c.on_extended_data do |c, _, data|
-          check.call "[#{host.name}/ERR] ", data, errbuf
+          check.call errpre, data, errbuf
+        end
+        c.on_close do
+          puts "#{outpre}#{outbuf}" unless outbuf.empty?
+          puts "#{errpre}#{errbuf}" unless errbuf.empty?
         end
       end
 
