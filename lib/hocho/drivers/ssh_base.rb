@@ -21,14 +21,15 @@ module Hocho
 
         ssh_cmd = ['ssh', *host.openssh_config.flat_map { |l| ['-o', "\"#{l}\""] }].join(' ')
         shm_exclude = shm_prefix.map{ |_| "--exclude=#{_}" }
-        rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete --exclude=.git), *shm_exclude, '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
+        compress = host.compress? ? ['-z'] : []
+        rsync_cmd = [*%w(rsync -a --copy-links --copy-unsafe-links --delete --exclude=.git), *compress, *shm_exclude, '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_basedir}"]
 
         puts "=> $ #{rsync_cmd.shelljoin}"
         system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
 
         unless shm_prefix.empty?
           shm_include = shm_prefix.map{ |_| "--include=#{_.sub(%r{/\z},'')}/***" }
-          rsync_cmd = [*%w(rsync -az --copy-links --copy-unsafe-links --delete), *shm_include, '--exclude=*', '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_shm_basedir}"]
+          rsync_cmd = [*%w(rsync -a --copy-links --copy-unsafe-links --delete), *compress, *shm_include, '--exclude=*', '--rsh', ssh_cmd, '.', "#{host.hostname}:#{host_shm_basedir}"]
           puts "=> $ #{rsync_cmd.shelljoin}"
           system(*rsync_cmd, chdir: base_dir) or raise 'failed to rsync'
           shm_prefix.each do |x|
