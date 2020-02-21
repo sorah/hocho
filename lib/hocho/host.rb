@@ -206,5 +206,9 @@ module Hocho
         retry
       end
     end
+
+    def compress?
+      properties.fetch(:compress, true)
+    end
   end
 end
