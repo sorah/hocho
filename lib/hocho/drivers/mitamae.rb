@@ -25,7 +25,7 @@ module Hocho
         exitstatus, _ = if @mitamae_path.start_with?('/')
           ssh_run("test -x #{@mitamae_path.shellescape}", error: false)
         else
-          ssh_run("which #{@mitamae_path.shellescape} 2>/dev/null >/dev/null", error: false)
+          ssh_run("#{@mitamae_path.shellescape} version 2>/dev/null >/dev/null", error: false)
         end
         exitstatus == 0
       end
