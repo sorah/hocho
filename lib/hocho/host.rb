@@ -163,6 +163,8 @@ module Hocho
          [["User", value]]
         when :user_known_hosts_file
          [["UserKnownHostsFile", value]]
+        when :proxy_jump
+         [["ProxyJump", value]]
         end
       end.compact.map do |keyval|
         keyval.join(separator)
