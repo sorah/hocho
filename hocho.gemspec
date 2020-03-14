@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "thor"
   spec.add_dependency "itamae"
-  spec.add_dependency "net-ssh"
+  spec.add_dependency "net-ssh", ">= 4.1.0"
   spec.add_dependency "hashie"
 
   spec.add_development_dependency "bundler"
