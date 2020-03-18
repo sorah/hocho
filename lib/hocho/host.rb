@@ -1,6 +1,7 @@
 require 'hocho/utils/symbolize'
 require 'hashie'
 require 'net/ssh'
+require 'net/ssh/proxy/jump'
 require 'net/ssh/proxy/command'
 
 module Hocho
