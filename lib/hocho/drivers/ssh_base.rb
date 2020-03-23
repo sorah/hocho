@@ -71,7 +71,12 @@ module Hocho
 
         temporary_passphrase = SecureRandom.base64(129).chomp
 
-        derive = system(*%w(openssl enc -pbkdf2), in: File::NULL, out: File::NULL, err: [:child, :out]) ? %w(-pbkdf2) : []
+        local_supports_pbkdf2 = system(*%w(openssl enc -pbkdf2), in: File::NULL, out: File::NULL, err: [:child, :out])
+        remote_supports_pbkdf2 = begin
+                                   exitstatus, * = ssh_run("openssl enc -pbkdf2", error: false, &:eof!)
+                                   exitstatus == 0
+                                 end
+        derive = local_supports_pbkdf2 && remote_supports_pbkdf2 ? %w(-pbkdf2) : []
 
         encrypted_password = IO.pipe do |r,w|
           w.write temporary_passphrase
