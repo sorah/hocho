@@ -27,18 +27,30 @@ Or install it yourself as:
 
     $ gem install hocho
 
-## Setup
+## Usage
 
 ``` yaml
 # hocho.yml
 inventory_providers:
   file:
     path: './hosts'
+
 property_providers:
+  ## Provide default values to host properties (reverse_merge).
   - add_default:
       properties:
         blah: blahblah
         # preferred_driver: mitamae
+        attributes:
+          node_attributes_goes_here: hello
+
+  ## Run ruby script to mutate host properties
+  - ruby_script:
+      name: name-for-your-convenience # optional
+      script: 'host.properties[:hello] = Time.now.xmlschema'
+    ## or 
+    # file: path/to/script.rb
+
 # driver_options:
 #   mitamae:
 #     mitamae_prepare_script: 'wget -O /usr/local/bin/mitamae https://...'
@@ -52,6 +64,8 @@ test.example.org:
   properties:
     # preferred_driver: bundler
     # preferred_driver: mitamae
+    attributes:
+      node_attributes_goes_here: hello
     run_list:
       - roles/app/default.rb
 ```
