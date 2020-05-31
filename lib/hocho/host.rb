@@ -198,8 +198,12 @@ module Hocho
 
     def make_ssh_connection
       alt = false
+      options = ssh_options
+      unless Net::SSH::VALID_OPTIONS.include?(:strict_host_key_checking)
+        options.delete(:strict_host_key_checking)
+      end
       begin
-        Net::SSH.start(name, nil, ssh_options)
+        Net::SSH.start(name, nil, options)
       rescue Net::SSH::Exception, Errno::ECONNREFUSED, Net::SSH::Proxy::ConnectError => e
         raise if alt
         raise unless alternate_ssh_options_available?
