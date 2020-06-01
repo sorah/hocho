@@ -169,13 +169,13 @@ module Hocho
         when :verify_host_key
           case value
           when :never
-            [["StrictHostKeyChecking", 'no']]
+            [["StrictHostKeyChecking", "no"]]
           when :accept_new_or_local_tunnel
-            [["StrictHostKeyChecking", 'accept-new']]
+            [["StrictHostKeyChecking", "accept-new"]]
           when :accept_new
-            [["StrictHostKeyChecking", 'accept-new']]
+            [["StrictHostKeyChecking", "accept-new"]]
           when :always
-            [["StrictHostKeyChecking", 'yes']]
+            [["StrictHostKeyChecking", "yes"]]
           end
         end
       end.compact.map do |keyval|
