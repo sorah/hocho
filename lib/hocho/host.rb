@@ -166,6 +166,17 @@ module Hocho
          [["User", value]]
         when :user_known_hosts_file
          [["UserKnownHostsFile", value]]
+        when :verify_host_key
+          case value
+          when :never
+            [["StrictHostKeyChecking", 'no']]
+          when :accept_new_or_local_tunnel
+            [["StrictHostKeyChecking", 'accept-new']]
+          when :accept_new
+            [["StrictHostKeyChecking", 'accept-new']]
+          when :always
+            [["StrictHostKeyChecking", 'yes']]
+          end
         end
       end.compact.map do |keyval|
         keyval.join(separator)
