@@ -166,6 +166,17 @@ module Hocho
          [["User", value]]
         when :user_known_hosts_file
          [["UserKnownHostsFile", value]]
+        when :verify_host_key
+          case value
+          when :never
+            [["StrictHostKeyChecking", "no"]]
+          when :accept_new_or_local_tunnel
+            [["StrictHostKeyChecking", "accept-new"]]
+          when :accept_new
+            [["StrictHostKeyChecking", "accept-new"]]
+          when :always
+            [["StrictHostKeyChecking", "yes"]]
+          end
         end
       end.compact.map do |keyval|
         keyval.join(separator)
@@ -198,8 +209,15 @@ module Hocho
 
     def make_ssh_connection
       alt = false
+      # A workaround for a bug on net-ssh: https://github.com/net-ssh/net-ssh/issues/764
+      # :strict_host_key_checking is translated from ssh config. However, Net::SSH.start does not accept
+      # the option as valid one. Remove this part when net-ssh fixes the bug.
+      options = ssh_options
+      unless Net::SSH::VALID_OPTIONS.include?(:strict_host_key_checking)
+        options.delete(:strict_host_key_checking)
+      end
       begin
-        Net::SSH.start(name, nil, ssh_options)
+        Net::SSH.start(name, nil, options)
       rescue Net::SSH::Exception, Errno::ECONNREFUSED, Net::SSH::Proxy::ConnectError => e
         raise if alt
         raise unless alternate_ssh_options_available?
