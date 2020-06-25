@@ -209,14 +209,14 @@ module Hocho
 
     def make_ssh_connection
       alt = false
-      # A workaround for a bug on net-ssh: https://github.com/net-ssh/net-ssh/issues/764
-      # :strict_host_key_checking is translated from ssh config. However, Net::SSH.start does not accept
-      # the option as valid one. Remove this part when net-ssh fixes the bug.
-      options = ssh_options
-      unless Net::SSH::VALID_OPTIONS.include?(:strict_host_key_checking)
-        options.delete(:strict_host_key_checking)
-      end
       begin
+        # A workaround for a bug on net-ssh: https://github.com/net-ssh/net-ssh/issues/764
+        # :strict_host_key_checking is translated from ssh config. However, Net::SSH.start does not accept
+        # the option as valid one. Remove this part when net-ssh fixes the bug.
+          options = ssh_options
+        unless Net::SSH::VALID_OPTIONS.include?(:strict_host_key_checking)
+          options.delete(:strict_host_key_checking)
+        end
         Net::SSH.start(name, nil, options)
       rescue Net::SSH::Exception, Errno::ECONNREFUSED, Net::SSH::Proxy::ConnectError => e
         raise if alt
