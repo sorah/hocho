@@ -107,7 +107,7 @@ module Hocho
         when :encryption
          [["Ciphers", [*value].join(?,)]]
         when :compression
-         [["Compression", value]]
+         [["Compression", value ? 'yes' : 'no']]
         when :compression_level
          [["CompressionLevel", value]]
         when :timeout
