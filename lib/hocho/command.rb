@@ -36,7 +36,7 @@ module Hocho
     desc "show NAME", ""
     method_option :format, enum: %w(yaml json), default: 'yaml'
     def show(name)
-      host = inventory.filter(name: name).first
+      host = inventory.filter({name: name}).first
       if host
         case options[:format]
         when 'yaml'
