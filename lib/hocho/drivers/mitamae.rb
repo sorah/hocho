@@ -41,20 +41,22 @@ module Hocho
 
       def prepare_mitamae
         return if mitamae_available? && !mitamae_outdated?
-        script = [*@mitamae_prepare_script].join("\n\n")
-        if script.empty?
+        scripts = [*@mitamae_prepare_script]
+        if scripts.empty?
           raise "We have to prepare MItamae, but not mitamae_prepare_script is specified"
         end
         prepare_sudo do |sh, sudovars, sudocmd|
-          log_prefix = "=> #{host.name} # "
-          log_prefix_white = ' ' * log_prefix.size
-          puts "#{log_prefix}#{script.each_line.map{ |_| "#{log_prefix_white}#{_.chomp}" }.join("\n")}"
+          scripts.each do |script|
+            log_prefix = "=> #{host.name} # "
+            log_prefix_white = ' ' * log_prefix.size
+            puts "#{log_prefix}#{script.each_line.map{ |_| "#{log_prefix_white}#{_.chomp}" }.join("\n")}"
 
-          ssh_run("bash") do |c|
-            set_ssh_output_hook(c)
+            ssh_run("bash") do |c|
+              set_ssh_output_hook(c)
 
-            c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd} bash <<-'HOCHOEOS'\n#{script}HOCHOEOS\n")
-            c.eof!
+              c.send_data("cd #{host_basedir.shellescape}\n#{sudovars}\n#{sudocmd} bash <<-'HOCHOEOS'\n#{script}\nHOCHOEOS\n")
+              c.eof!
+            end
           end
         end
         availability, outdated = mitamae_available?, mitamae_outdated?
