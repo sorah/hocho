@@ -2,10 +2,9 @@ require 'hocho/drivers'
 
 module Hocho
   class Runner
-    def initialize(host, driver: nil, check_ssh_port: false, base_dir: '.', initializers: [], driver_options: {})
+    def initialize(host, driver: nil, base_dir: '.', initializers: [], driver_options: {})
       @host = host
       @driver = driver && driver.to_sym
-      @check_ssh_port = check_ssh_port
       @base_dir = base_dir
       @initializers = initializers
       @driver_options = driver_options
@@ -23,10 +22,6 @@ module Hocho
     ensure
       driver.finalize if driver
     end
-
-    # def check_ssh_port
-    #   return unless @check_ssh_port
-    # end
 
     def ssh
       host.ssh_connection

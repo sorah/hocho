@@ -19,13 +19,11 @@ module Hocho
       @tmpdir = tmpdir
       @shmdir = shmdir
       @sudo_password = sudo_password
-
-      @use_alternate_ssh_options = false
     end
 
     attr_reader :name, :providers, :properties, :tmpdir, :shmdir
     attr_writer :sudo_password
-    attr_accessor :tags, :use_alternate_ssh_options
+    attr_accessor :tags
 
     def to_h
       {
@@ -82,7 +80,14 @@ module Hocho
     end
 
     def ssh_options
-      use_alternate_ssh_options? ? alternate_ssh_options : normal_ssh_options
+      @validated_ssh_options || normal_ssh_options
+    end
+
+    def candidate_ssh_options
+      [
+        normal_ssh_options,
+        *alternate_ssh_options,
+      ]
     end
 
     def normal_ssh_options
@@ -90,15 +95,20 @@ module Hocho
     end
 
     def alternate_ssh_options
-      normal_ssh_options.merge(Hocho::Utils::Symbolize.keys_of(properties.fetch(:alternate_ssh_options, {})))
-    end
-
-    def alternate_ssh_options_available?
-      !!properties[:alternate_ssh_options]
-    end
-
-    def use_alternate_ssh_options?
-      @use_alternate_ssh_options
+      alts = properties.fetch(:alternate_ssh_options, nil)
+      list = case alts
+      when Hash
+        [alts]
+      when Array
+        alts
+      when nil
+        []
+      else
+        raise TypeError, "alternate_ssh_options should be a Hash or Array"
+      end
+      list.map do |opts|
+        normal_ssh_options.merge(Hocho::Utils::Symbolize.keys_of(opts))
+      end
     end
 
     def openssh_config(separator='=')
@@ -208,22 +218,24 @@ module Hocho
     end
 
     def make_ssh_connection
-      alt = false
+      ssh_options_candidates = candidate_ssh_options()
+      ssh_options_candidates_size = ssh_options_candidates.size
+      tries = 1
       begin
         # A workaround for a bug on net-ssh: https://github.com/net-ssh/net-ssh/issues/764
         # :strict_host_key_checking is translated from ssh config. However, Net::SSH.start does not accept
         # the option as valid one. Remove this part when net-ssh fixes the bug.
-          options = ssh_options
+        options = ssh_options_candidates[0]
         unless Net::SSH::VALID_OPTIONS.include?(:strict_host_key_checking)
           options.delete(:strict_host_key_checking)
         end
-        Net::SSH.start(name, nil, options)
+        retval = Net::SSH.start(name, nil, options)
+        @validated_ssh_options = options
+        retval
       rescue Net::SSH::Exception, Errno::ECONNREFUSED, Net::SSH::Proxy::ConnectError => e
-        raise if alt
-        raise unless alternate_ssh_options_available?
-        puts "[#{name}] Trying alternate_ssh_options due to #{e.inspect}"
-        self.use_alternate_ssh_options = true
-        alt = true
+        raise unless ssh_options_candidates.shift
+        tries += 1
+        puts "[#{name}] Trying alternate ssh options due to #{e.inspect} (#{tries}/#{ssh_options_candidates_size})"
         retry
       end
     end
