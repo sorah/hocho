@@ -4,7 +4,7 @@ require 'shellwords'
 module Hocho
   module Drivers
     class ItamaeSsh < Base
-      def initialize(host, base_dir: '.', initializers: [], itamae_options: [])
+      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], **)
         super host, base_dir: base_dir, initializers: initializers
         @itamae_options = itamae_options
       end

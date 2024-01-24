@@ -3,7 +3,9 @@ require 'hocho/drivers/ssh_base'
 module Hocho
   module Drivers
     class Mitamae < SshBase
-      def initialize(host, base_dir: '.', mitamae_path: 'mitamae', mitamae_prepare_script: [], mitamae_outdate_check_script: nil, initializers: [], mitamae_options: [], deploy_options: {})
+      def initialize(host, base_dir: '.', mitamae_path: 'mitamae', mitamae_prepare_script: [],
+                     mitamae_outdate_check_script: nil, initializers: [], mitamae_options: [],
+                     deploy_options: {}, keep_synced_files: false, **)
         super host, base_dir: base_dir, initializers: initializers
 
         @mitamae_path = mitamae_path
@@ -11,6 +13,7 @@ module Hocho
         @mitamae_outdate_check_script = mitamae_outdate_check_script
         @mitamae_options = mitamae_options
         @deploy_options = deploy_options
+        @keep_synced_files = keep_synced_files
       end
 
       def run(dry_run: false)
