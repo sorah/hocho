@@ -3,13 +3,15 @@ require 'hocho/drivers/ssh_base'
 module Hocho
   module Drivers
     class Bundler < SshBase
-      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], bundle_without: [], bundle_path: nil, deploy_options: {})
+      def initialize(host, base_dir: '.', initializers: [], itamae_options: [], bundle_without: [], bundle_path: nil,
+                     deploy_options: {}, keep_synced_files: false, **)
         super host, base_dir: base_dir, initializers: initializers
 
         @itamae_options = itamae_options
         @bundle_without = bundle_without
         @bundle_path = bundle_path
         @deploy_options = deploy_options
+        @keep_synced_files = keep_synced_files
       end
 
       def run(dry_run: false)

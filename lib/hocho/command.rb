@@ -54,6 +54,8 @@ module Hocho
     method_option :dry_run, type: :boolean, default: false, aliases: %w(-n)
     method_option :exclude, type: :string, default: '', aliases: %w(-e)
     method_option :driver, type: :string
+    method_option :keep_synced_files, type: :boolean, default: false,
+                  desc: "Keep the recipes on a server after run (for bundler and mitamae drivers)"
     def apply(name)
       hosts = inventory.filter({name: name}, exclude_filters: {name: options[:exclude]})
       if hosts.empty?
@@ -84,8 +86,11 @@ module Hocho
           driver_options: config[:driver_options] || {},
         ).run(
           dry_run: options[:dry_run],
+          keep_synced_files: options[:keep_synced_files]
         )
       end
+    rescue Hocho::Utils::Finder::NotFound => e
+      abort e.message
     end
 
     private

@@ -14,9 +14,12 @@ module Hocho
 
     attr_reader :host, :driver, :base_dir, :initializers
 
-    def run(dry_run: false)
+    def run(dry_run: false, keep_synced_files: false)
       puts "=> Running on #{host.name} using #{best_driver_name}"
       driver_options = @driver_options[best_driver_name] || {}
+
+      driver_options[:keep_synced_files] = keep_synced_files
+
       driver = best_driver.new(host, base_dir: base_dir, initializers: initializers, **driver_options)
       driver.run(dry_run: dry_run)
     ensure

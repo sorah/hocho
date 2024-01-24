@@ -10,10 +10,14 @@ module Hocho
       end
 
       def finalize
+        return if @keep_synced_files
+
         remove_host_tmpdir!
         remove_host_shmdir!
       end
 
+      # @param deploy_dir [String] path on the server to copy the files to. If not specified, an automatic dir in /tmp is used
+      # @param shm_prefix [Array<String>] additional directories that will be copied to /dev/shm on the server
       def deploy(deploy_dir: nil, shm_prefix: [])
         @host_basedir = deploy_dir if deploy_dir
 
@@ -44,12 +48,6 @@ module Hocho
         end
 
         yield
-      ensure
-        if !deploy_dir || !keep_synced_files
-          cmd = "rm -rf #{host_basedir.shellescape}"
-          puts "=> #{host.name} $ #{cmd}"
-          ssh_run(cmd, error: false)
-        end
       end
 
       private
